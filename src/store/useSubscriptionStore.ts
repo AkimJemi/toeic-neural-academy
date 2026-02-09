@@ -32,7 +32,8 @@ export const useSubscriptionStore = create<SubscriptionState>()(
                 const { currentUser } = get();
 
                 // --- Development / Mock Mode ---
-                if (!process.env.VITE_NEXUS_API_URL && !currentUser?.userid) {
+                const apiUrl = import.meta.env.VITE_NEXUS_API_URL;
+                if (!apiUrl && !currentUser?.userid) {
                     console.log(`[DEV] Simulating upgrade to ${planId}`);
                     const newStatus = planId.includes('premium') ? 'premium' : 'basic';
                     set({

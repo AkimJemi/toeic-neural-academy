@@ -4,6 +4,7 @@ import { useQuizStore } from '../store/useQuizStore';
 import { soundManager } from '../utils/sound';
 import { ChevronLeft, ChevronRight, AlertTriangle, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ListeningPlayer } from './ListeningPlayer';
 
 export const Quiz: React.FC = () => {
     const { categoryId } = useParams();
@@ -133,19 +134,12 @@ export const Quiz: React.FC = () => {
                                     {currentQuestion?.question || "Loading Question..."}
                                 </h1>
                                 {['Part 1', 'Part 2', 'Part 3', 'Part 4'].some(p => currentQuestion?.category?.includes(p)) && (
-                                    <button 
-                                        onClick={() => {
-                                            if ('speechSynthesis' in window) {
-                                                const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
-                                                utterance.lang = 'en-US';
-                                                window.speechSynthesis.speak(utterance);
-                                            }
-                                        }}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-cyan-400 text-sm font-bold uppercase tracking-wider transition-colors border border-cyan-500/20"
-                                    >
-                                        <Volume2 className="w-4 h-4" />
-                                        Play Audio
-                                    </button>
+                                    <div className="mb-6">
+                                        <ListeningPlayer 
+                                            script={currentQuestion.question} 
+                                            title={`Neural Audio: ${currentQuestion.category}`}
+                                        />
+                                    </div>
                                 )}
                                 {currentQuestion?.translations?.ja && (
                                      <p className="text-slate-500 text-sm">{currentQuestion.translations.ja.question}</p>
