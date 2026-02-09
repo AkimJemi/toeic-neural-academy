@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-white font-sans antialiased overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-slate-900/50 backdrop-blur-md border border-slate-800/50 shadow-xl;
+  }
+
+  .text-neon {
+    text-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee;
+  }
+
+  .text-neon-indigo {
+    text-shadow: 0 0 10px #6366f1, 0 0 20px #6366f1;
+  }
+
+  .font-brand {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
