@@ -21,7 +21,8 @@ export const useQuizStore = create<ExtendedQuizState>((set, get) => ({
 
     startQuiz: async (category: string) => {
         try {
-            const res = await fetch('/api/questions?category=' + (category === 'All' ? '' : category));
+            const API_URL = import.meta.env.VITE_NEXUS_API_URL || 'http://localhost:3000';
+            const res = await fetch(`${API_URL}/api/toeic/questions?category=${category === 'All' ? '' : category}`);
             if (!res.ok) throw new Error('Failed to fetch questions');
             const data = await res.json();
             // Handle pagination if API wrapper returns { data, pagination }
