@@ -1,24 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Brain, LayoutDashboard, User, Settings, Layers } from 'lucide-react';
+import { Brain, LayoutDashboard, User, Settings, Layers, Zap } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import { UpgradeModal } from './UpgradeModal';
 import clsx from 'clsx';
 
 export const Layout: React.FC = () => {
-    const { isAuthenticated, isAdmin } = useAuthStore();
+    const { isAuthenticated, isAdmin, currentUser } = useAuthStore();
+    const { status, setup } = useSubscriptionStore();
+    const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated && currentUser) {
+            setup(currentUser);
+        }
+    }, [isAuthenticated, currentUser, setup]);
 
     const navItems = [
         { path: '/', icon: Brain, label: 'Study', exact: true },
         { path: '/flashcards', icon: Layers, label: 'Cards' },
         { path: '/analytics', icon: LayoutDashboard, label: 'Stats' },
+        ...(isAdmin ? [{ path: '/admin', icon: Settings, label: 'Admin' }] : [])
     ];
-
-    if (isAdmin) {
-        navItems.push({ path: '/admin', icon: Settings, label: 'Admin' });
-    }
-
-    // Hide layout on specific routes like active Quiz if needed, but usually we keep it
-    // The user requested bottom nav for mobile.
 
     return (
         <div className="min-h-screen text-white font-sans relative overflow-hidden flex flex-col">
@@ -27,11 +31,9 @@ export const Layout: React.FC = () => {
                  <Outlet />
              </main>
 
-             {/* WebGL Background is in App.tsx wrapping this, or we can put it here if we want per-page control.
-                 For now, App.tsx handles the background opacity/state.
-             */}
+             <UpgradeModal isOpen={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
 
-             {/* Desktop Navigation (Top-Right or Sidebar - let's go with minimal Top-Right for now as per design) */}
+             {/* Desktop Navigation */}
              <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-950/20 backdrop-blur-md border-b border-white/5 hidden md:flex items-center justify-between px-8 z-50">
                 <div className="text-xl font-brand text-cyan-400 italic tracking-wider">
                     NEURAL<span className="text-white">ACADEMY</span>
@@ -41,19 +43,31 @@ export const Layout: React.FC = () => {
                         <NavLink 
                             key={item.path} 
                             to={item.path}
-                            className={(navState) => clsx(
+                            className={({ isActive }) => clsx(
                                 "flex items-center gap-2 text-sm font-bold uppercase tracking-widest hover:text-cyan-400 transition-colors",
-                                navState.isActive ? "text-cyan-400" : "text-slate-500"
+                                isActive ? "text-cyan-400" : "text-slate-500"
                             )}
                         >
                             <item.icon className="w-4 h-4" />
                             {item.label}
                         </NavLink>
                     ))}
-                    {/* User Profile / Login status */}
+                    
                     <div className="w-px h-6 bg-slate-800" />
+                    
+                    {/* Upgrade Button */}
+                    {status === 'free' && (
+                        <button 
+                            onClick={() => setUpgradeModalOpen(true)}
+                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all"
+                        >
+                            <Zap className="w-3 h-3 fill-emerald-400" />
+                            Upgrade
+                        </button>
+                    )}
+
                     <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-mono">
+                         <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-mono border border-slate-700">
                              {isAuthenticated ? <User className="w-4 h-4 text-emerald-400" /> : <NavLink to="/login" className="flex items-center justify-center w-full h-full text-slate-400 hover:text-cyan-400 transition-colors"><User className="w-4 h-4" /></NavLink>}
                          </div>
                     </div>
