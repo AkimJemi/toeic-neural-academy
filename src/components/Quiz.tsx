@@ -2,9 +2,10 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuizStore } from '../store/useQuizStore';
 import { soundManager } from '../utils/sound';
-import { ChevronLeft, ChevronRight, AlertTriangle, Volume2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ListeningPlayer } from './ListeningPlayer';
+import { AdComponent } from './AdComponent';
 
 export const Quiz: React.FC = () => {
     const { categoryId } = useParams();
@@ -14,16 +15,50 @@ export const Quiz: React.FC = () => {
         setAnswer, nextQuestion, prevQuestion, endQuiz, resetQuiz, startQuiz 
     } = useQuizStore();
 
+    const [error, setError] = React.useState<string | null>(null);
+
     React.useEffect(() => {
-        if (!isActive && categoryId && !showResults) {
-            startQuiz(categoryId);
-        }
+        const initQuiz = async () => {
+            if (!isActive && categoryId && !showResults) {
+                const result = await startQuiz(categoryId);
+                if (!result.success) {
+                    setError(result.error || 'Initialization Failed');
+                }
+            }
+        };
+        initQuiz();
     }, [categoryId, isActive, showResults, startQuiz]);
 
     const handleExit = () => {
         endQuiz();
         navigate('/');
     };
+
+    if (error) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-lg w-full shadow-2xl text-center"
+                >
+                    <AlertTriangle className="w-16 h-16 text-rose-500 mx-auto mb-6 animate-pulse" />
+                    <h2 className="text-3xl font-brand text-white mb-4 uppercase italic">Access Restricted</h2>
+                    <p className="text-slate-400 mb-8 leading-relaxed">
+                        {error}
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                        <button 
+                            onClick={handleExit}
+                            className="px-8 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all font-bold uppercase tracking-widest text-sm"
+                        >
+                            Return to Base
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     if (!isActive && !showResults) {
         return (
@@ -82,6 +117,10 @@ export const Quiz: React.FC = () => {
                     <p className="text-slate-400 mb-8">
                         Score: <span className="text-white font-bold">{score}</span> / {questions.length}
                     </p>
+
+                    <div className="mb-8 max-w-sm mx-auto">
+                        <AdComponent />
+                    </div>
 
                     <div className="flex gap-4 justify-center">
                         <button 

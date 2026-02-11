@@ -8,9 +8,9 @@ export default defineConfig({
     port: 5185,
     proxy: {
       '/api': {
-        target: 'http://localhost:3020',
+        target: 'http://localhost:3000/api/toeic',
         changeOrigin: true,
-        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }

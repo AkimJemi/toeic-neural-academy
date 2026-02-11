@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shuffle, Check, X } from 'lucide-react';
 import { soundManager } from '../utils/sound';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface Flashcard {
     id: number;
@@ -15,11 +16,13 @@ export const FlashcardView: React.FC = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
     const [loading, setLoading] = useState(true);
+    const currentUser = useAuthStore((state) => state.currentUser);
 
     useEffect(() => {
         const loadCards = async () => {
              try {
-                 const res = await fetch('/api/questions');
+                 const query = currentUser?.userId ? `?userId=${currentUser.userId}` : '';
+                 const res = await fetch(`/api/questions${query}`);
                  const data = await res.json();
                  const questions = Array.isArray(data) ? data : (data.data || []);
                  

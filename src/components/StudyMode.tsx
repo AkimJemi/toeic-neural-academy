@@ -131,6 +131,37 @@ export const StudyMode: React.FC = () => {
                     </h2>
                     <RankingView />
                     <PublicChatView />
+
+                    {/* Recommended Resources (Affiliate Section) */}
+                    <div className="space-y-4 pt-4">
+                        <h2 className="text-slate-400 font-brand text-sm tracking-wider flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-emerald-500" />
+                            EXTERNAL MODULES
+                        </h2>
+                        
+                        <div className="space-y-3">
+                            {[
+                                { title: "Neural Vocab Booster", desc: "Advanced lexicon expansion for Part 5/6.", price: "¥2,400" },
+                                { title: "Listening Echo System", desc: "Native frequency synchronization.", price: "¥1,850" }
+                            ].map((item, i) => (
+                                <motion.div 
+                                    key={i}
+                                    whileHover={{ x: 5 }}
+                                    className="p-3 bg-slate-900/40 border border-slate-800 rounded-lg hover:border-emerald-500/30 transition-all cursor-pointer group"
+                                >
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h4 className="text-[11px] font-bold text-slate-200 group-hover:text-emerald-400">{item.title}</h4>
+                                        <span className="text-[9px] font-mono text-slate-500">{item.price}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 line-clamp-2">{item.desc}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                        
+                        <button className="w-full py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest transition-colors">
+                            Explore Archive
+                        </button>
+                    </div>
                 </div>
             </div>
         </motion.div>

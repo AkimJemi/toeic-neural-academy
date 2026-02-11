@@ -396,7 +396,38 @@ app.get('/api/admin/stats', async (req, res) => {
 // Questions
 app.get('/api/questions', async (req, res) => {
   try {
-    const { page, limit, search, category } = req.query;
+    const { page, limit, search, category, userId } = req.query;
+
+    // Feature Gating Logic
+    if (userId) {
+        const isAdminRes = await pool.query(`SELECT role FROM ${TABLES.users} WHERE userId = $1`, [userId]);
+        const isAdmin = isAdminRes.rows[0]?.role === 'admin';
+        
+        if (!isAdmin) {
+            // Check Subscription
+            const subRes = await pool.query('SELECT status FROM subscriptions WHERE userId = $1 AND (projectScope = $2 OR projectScope = $3) AND status = $4', [userId, 'toeic', 'all', 'active']);
+            const hasActiveSub = subRes.rows.length > 0;
+            
+            if (!hasActiveSub) {
+                // Count attempts today
+                const attemptsRes = await pool.query(`
+                    SELECT count(*) as count 
+                    FROM ${TABLES.attempts} 
+                    WHERE userId = $1 AND date >= CURRENT_DATE
+                `, [userId]);
+                const dailyAttempts = parseInt(attemptsRes.rows[0].count);
+                
+                if (dailyAttempts >= 3) {
+                    return res.status(403).json({ 
+                        error: 'Daily limit reached', 
+                        limitReached: true,
+                        message: '1日の無料学習制限（3回）に達しました。プレミアムプランで無制限に学習しましょう！' 
+                    });
+                }
+            }
+        }
+    }
+
     const usePagination = page !== undefined || limit !== undefined || search !== undefined || category !== undefined;
     
     if (!usePagination) {

@@ -20,11 +20,25 @@ export const useAuthStore = create<AuthState>()(
 
             login: async (userId: string) => {
                 try {
-                    const user = await db.users.get(userId);
-                    if (user) {
+                    // Fetch user from API (which checks DB)
+                    const res = await fetch(`/api/users/${userId}`);
+                    if (res.ok) {
+                        const rawUser = await res.json();
+                        // Normalize keys (API returns lowercase from Postgres/Prisma)
+                        const user: User = {
+                            userId: rawUser.userid || rawUser.userId,
+                            nickname: rawUser.nickname,
+                            role: rawUser.role,
+                            status: rawUser.status,
+                            joinedAt: new Date(rawUser.joinedat || rawUser.joinedAt || Date.now())
+                        };
+
                         if (user.status === 'suspended') {
                             throw new Error('USER_SUSPENDED');
                         }
+                        // Sync to local DB for offline capability if needed
+                        await db.users.put(user);
+
                         set({
                             currentUser: user,
                             isAuthenticated: true,
@@ -42,25 +56,33 @@ export const useAuthStore = create<AuthState>()(
 
             signup: async (userId: string, nickname: string, role: 'user' | 'admin' = 'user') => {
                 try {
-                    // Check existence
-                    const exists = await db.users.startSession(userId);
-                    if (exists) return { success: false, error: 'exists' };
-
-                    const newUser: User = {
-                        userId,
-                        nickname,
-                        role,
-                        joinedAt: new Date()
-                    };
-
-                    await db.users.add(newUser);
-
-                    set({
-                        currentUser: newUser,
-                        isAuthenticated: true,
-                        isAdmin: role === 'admin'
+                    const res = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId, nickname, role })
                     });
-                    return { success: true };
+
+                    if (res.ok) {
+                        const rawUser = await res.json();
+                        const newUser: User = {
+                            userId: rawUser.userid || rawUser.userId,
+                            nickname: rawUser.nickname,
+                            role: rawUser.role,
+                            status: rawUser.status,
+                            joinedAt: new Date(rawUser.joinedat || rawUser.joinedAt || Date.now())
+                        };
+
+                        // Sync to local DB
+                        await db.users.put(newUser);
+
+                        set({
+                            currentUser: newUser,
+                            isAuthenticated: true,
+                            isAdmin: role === 'admin'
+                        });
+                        return { success: true };
+                    }
+                    return { success: false, error: 'verification_failed' };
                 } catch (error: any) {
                     console.error("CRITICAL: Signup protocol failed. Diagnostic data:", error);
                     return { success: false, error: error.message || 'connection_failure' };

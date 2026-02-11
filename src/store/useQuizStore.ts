@@ -6,7 +6,7 @@ import { normalizeKeys } from '../utils/normalize';
 
 interface ExtendedQuizState extends QuizState {
     isActive: boolean;
-    startQuiz: (category: string) => Promise<{ success: boolean; error?: string }>;
+    startQuiz: (category: string) => Promise<{ success: boolean; error?: string; limitReached?: boolean }>;
     endQuiz: () => void;
     saveProgress: (finalScore?: number) => Promise<void>;
 }
@@ -21,19 +21,37 @@ export const useQuizStore = create<ExtendedQuizState>((set, get) => ({
 
     startQuiz: async (category: string) => {
         try {
-            const API_URL = import.meta.env.VITE_NEXUS_API_URL || 'http://localhost:3000';
-            const res = await fetch(`${API_URL}/api/toeic/questions?category=${category === 'All' ? '' : category}`);
+            const currentUser = useAuthStore.getState().currentUser;
+            const userId = currentUser?.userId;
+
+            if (!userId) {
+                return { success: false, error: 'AUTH_ERROR: User session invalid.' };
+            }
+
+            const queryParams = new URLSearchParams({
+                category: category === 'All' ? '' : category,
+                userId: userId
+            });
+
+            const res = await fetch(`/api/questions?${queryParams.toString()}`);
+
+            if (res.status === 403) {
+                const errorData = await res.json();
+                return {
+                    success: false,
+                    error: errorData.message || 'DAILY_LIMIT_REACHED',
+                    limitReached: true
+                };
+            }
+
             if (!res.ok) throw new Error('Failed to fetch questions');
             const data = await res.json();
-            // Handle pagination if API wrapper returns { data, pagination }
             const questions = Array.isArray(data) ? data : data.data;
 
             if (!questions || questions.length === 0) {
                 return { success: false, error: 'SECTOR_EMPTY: No data available for this category.' };
             }
 
-            // Check for existing session (Optional: restore session logic here)
-            // For now, fresh start
             set({
                 questions: normalizeKeys(questions),
                 currentQuestionIndex: 0,

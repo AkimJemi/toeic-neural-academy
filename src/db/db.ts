@@ -121,6 +121,9 @@ export const db = {
                 return null;
             }
             return null;
+        },
+        put: async (user: User) => {
+            return await localDB.users.put(user);
         }
     },
     attempts: {
