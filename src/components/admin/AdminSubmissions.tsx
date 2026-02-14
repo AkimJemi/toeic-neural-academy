@@ -37,7 +37,7 @@ export const AdminSubmissions: React.FC = () => {
             await fetch(`/api/admin/submissions/${id}/approve`, { method: 'POST' });
             setSubmissions(prev => prev.filter(s => s.id !== id));
             setViewingId(null);
-        } catch (e) {
+        } catch (_) {
             alert("Approval Failed");
         }
     };
@@ -48,7 +48,7 @@ export const AdminSubmissions: React.FC = () => {
             await fetch(`/api/admin/submissions/${id}`, { method: 'DELETE' });
             setSubmissions(prev => prev.filter(s => s.id !== id));
             setViewingId(null);
-        } catch (e) {
+        } catch (_) {
             alert("Rejection Failed");
         }
     };
@@ -56,7 +56,7 @@ export const AdminSubmissions: React.FC = () => {
     const parseOptions = (opts: any) => {
         try {
             return typeof opts === 'string' ? JSON.parse(opts) : opts;
-        } catch (e) {
+        } catch (_) {
             return [];
         }
     };

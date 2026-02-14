@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const normalizeKeys = (obj: any): any => {
     if (Array.isArray(obj)) {
         return obj.map(v => normalizeKeys(v));

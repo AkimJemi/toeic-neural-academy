@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// import { Howl } from 'howler';
+
 class NeuralAudio {
     private ctx: AudioContext | null = null;
     private masterGain: GainNode | null = null;

@@ -43,7 +43,7 @@ export const AdminMessages: React.FC = () => {
             });
             setReplyText('');
             fetchMessages();
-        } catch (e) {
+        } catch (_) {
             alert("Failed to send reply");
         }
     };

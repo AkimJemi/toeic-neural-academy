@@ -36,7 +36,7 @@ export const AdminUsers: React.FC = () => {
                 body: JSON.stringify({ status: newStatus })
             });
             fetchUsers();
-        } catch (e) {
+        } catch (_) {
             alert("Failed to update status");
         }
     };
