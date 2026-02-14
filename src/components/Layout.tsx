@@ -8,7 +8,8 @@ import clsx from 'clsx';
 
 export const Layout: React.FC = () => {
     const { isAuthenticated, isAdmin, currentUser } = useAuthStore();
-    const { status, setup } = useSubscriptionStore();
+    const status = useSubscriptionStore((state) => state.status);
+    const setup = useSubscriptionStore((state) => state.setup);
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
     useEffect(() => {

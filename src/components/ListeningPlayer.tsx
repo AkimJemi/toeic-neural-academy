@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, Square, RotateCcw, Volume2, Mic2 } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, Mic2 } from 'lucide-react';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import clsx from 'clsx';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface ListeningPlayerProps {
     script: string;
     title?: string;
     autoPlay?: boolean;
-    onEnd?: () => void;
 }
 
-export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({ script, title = "Neural Audio Stream", autoPlay = false, onEnd }) => {
+export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({ script, title = "Neural Audio Stream", autoPlay = false }) => {
     const { speak, pause, resume, stop, isPlaying, isPaused, progress, currentWord } = useTextToSpeech();
     const [rate, setRate] = useState(1.0);
     

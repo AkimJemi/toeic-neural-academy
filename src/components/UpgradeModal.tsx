@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+// Force rebuild
 import { X, Check } from 'lucide-react';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import React from 'react';
@@ -9,7 +10,7 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) => {
-    const { status, upgrade } = useSubscriptionStore();
+    const upgrade = useSubscriptionStore((state) => state.upgrade);
 
     const handleUpgrade = (plan: 'basic' | 'premium') => {
         // Map simplified plans to Stripe Price IDs (Mock for now)
