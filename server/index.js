@@ -904,7 +904,7 @@ app.post('/api/attempts', async (req, res) => {
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }
