@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../store/useQuizStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 import { Zap, Layers, Globe, Shield, Terminal, BookOpen, Award, Image, MessageCircle, Mic, PenTool, FileText, Library } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -21,6 +22,7 @@ const ICON_MAP: Record<string, any> = {
 export const StudyMode: React.FC = () => {
     const navigate = useNavigate();
     const { } = useQuizStore();
+    const { isAuthenticated } = useAuthStore();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -96,6 +98,10 @@ export const StudyMode: React.FC = () => {
                                     onMouseEnter={() => soundManager.hover()}
                                     onClick={async () => {
                                         soundManager.click();
+                                        if (!isAuthenticated) {
+                                            navigate('/login');
+                                            return;
+                                        }
                                         navigate(`/quiz/${cat.id}`);
                                     }}
                                     className="group relative p-4 bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition-all overflow-hidden flex flex-col h-full min-h-[120px]"
