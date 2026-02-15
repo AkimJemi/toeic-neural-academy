@@ -63,7 +63,8 @@ export const useQuizStore = create<ExtendedQuizState>((set, get) => ({
             return { success: true };
         } catch (error) {
             console.error("[Neural Store] Failed to start quiz:", error);
-            return { success: false, error: 'CONNECTION_ERROR: Failed to initialize Neural Link.' };
+            const errMsg = error instanceof Error ? error.message : String(error);
+            return { success: false, error: `CONNECTION_ERROR: ${errMsg}` };
         }
     },
 
