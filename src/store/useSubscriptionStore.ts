@@ -47,7 +47,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
                 try {
                     // Call Nexus Prime Checkout API
-                    const API_BASE = 'http://localhost:3000'; // Should be env var
+                    const API_BASE = import.meta.env.VITE_NEXUS_API_URL || 'http://localhost:3000';
                     const res = await fetch(`${API_BASE}/api/subscription/checkout`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +81,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
                 try {
                     // Call Nexus Prime Status API
-                    const API_BASE = 'http://localhost:3000';
+                    const API_BASE = import.meta.env.VITE_NEXUS_API_URL || 'http://localhost:3000';
                     const res = await fetch(`${API_BASE}/api/subscription/status?userId=${currentUser.userid}`);
 
                     if (res.ok) {

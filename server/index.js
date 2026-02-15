@@ -20,6 +20,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the React app
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, '../dist')));
+}
+
 // Table Prefixes to ensure no conflict with G-Kentei App
 const TABLES = {
     users: 'toeic_users',
@@ -896,7 +901,15 @@ app.post('/api/attempts', async (req, res) => {
     }
 });
 
-const PORT = 3020;
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, '../dist/index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 3020;
 const server = app.listen(PORT, () => {
     console.log(`[Neural Link] Server active on port ${PORT}`);
 });
