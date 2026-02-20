@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuizStore } from '../store/useQuizStore';
 import { soundManager } from '../utils/sound';
-import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertTriangle, Mic2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ListeningPlayer } from './ListeningPlayer';
 import { AdComponent } from './AdComponent';
@@ -18,12 +18,18 @@ export const Quiz: React.FC = () => {
     const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
+        console.log('Quiz Component Mounted. Category:', categoryId, 'IsActive:', isActive, 'ShowResults:', showResults);
         const initQuiz = async () => {
             if (!isActive && categoryId && !showResults) {
+                console.log('Initializing Quiz...');
                 const result = await startQuiz(categoryId);
+                console.log('StartQuiz Result:', result);
                 if (!result.success) {
+                    console.error('Quiz Init Failed:', result.error);
                     setError(result.error || 'Initialization Failed');
                 }
+            } else {
+                console.log('Skipping Init. IsActive:', isActive, 'ShowResults:', showResults);
             }
         };
         initQuiz();
@@ -159,93 +165,162 @@ export const Quiz: React.FC = () => {
 
             {/* Main Content */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 flex items-center justify-center">
-                <div className="max-w-3xl w-full">
+                <div className={`w-full ${['Part 6', 'Part 7'].includes(currentQuestion?.category) ? 'max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8' : 'max-w-3xl'}`}>
                     <AnimatePresence mode="wait">
+                        {currentQuestion && (
                         <motion.div
                             key={currentQuestionIndex}
                             initial={{ x: 20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -20, opacity: 0 }}
-                            className="space-y-8"
+                            className="space-y-8 h-full flex flex-col justify-center"
                         >
-                            <div className="space-y-4">
-                                <h1 className="text-2xl md:text-3xl font-medium leading-relaxed">
-                                    {currentQuestion?.question || "Loading Question..."}
-                                </h1>
-                                {['Part 1', 'Part 2', 'Part 3', 'Part 4'].some(p => currentQuestion?.category?.includes(p)) && (
-                                    <div className="mb-6">
-                                        <ListeningPlayer 
-                                            script={currentQuestion.question} 
-                                            title={`Neural Audio: ${currentQuestion.category}`}
-                                        />
+                            {/* Left Column for Passages (Part 6/7) */}
+                            {['Part 6', 'Part 7'].includes(currentQuestion.category) && currentQuestion.passage && (
+                                <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 text-slate-300 leading-relaxed font-serif text-lg h-full overflow-y-auto max-h-[60vh] md:max-h-[calc(100vh-200px)]">
+                                    <div className="sticky top-0 bg-slate-900/90 backdrop-blur-sm pb-4 mb-4 border-b border-slate-800 flex items-center gap-2 text-cyan-400 font-bold uppercase tracking-wider">
+                                        Scan the Passage
+                                    </div>
+                                    {currentQuestion.passage.split('\n').map((line, i) => (
+                                        <p key={i} className="mb-4">{line}</p>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Right Column / Main Question Area */}
+                            <div className="space-y-8">
+                                {/* Image for Part 1 */}
+                                {currentQuestion.imageUrl && (
+                                    <div className="rounded-2xl overflow-hidden border border-slate-700 shadow-2xl relative group">
+                                         <img src={currentQuestion.imageUrl} alt="TOEIC Question" className="w-full h-auto object-cover max-h-[400px]" />
+                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
                                     </div>
                                 )}
-                                {currentQuestion?.translations?.ja && (
-                                     <p className="text-slate-500 text-sm">{currentQuestion.translations.ja.question}</p>
+
+                                {/* Audio Player for Listening Parts */}
+                                {(['Part 1', 'Part 2', 'Part 3', 'Part 4'].some(p => currentQuestion.category?.includes(p)) || currentQuestion.audioUrl) && (
+                                    <div className="mb-6">
+                                        <ListeningPlayer 
+                                            // Construct script for TTS if no real audio, particularly for Part 1/2 options
+                                            script={
+                                                ['Part 1', 'Part 2'].includes(currentQuestion.category) 
+                                                ? `${currentQuestion.question} \n\n (A) ${currentQuestion.options[0]} \n (B) ${currentQuestion.options[1]} \n (C) ${currentQuestion.options[2]} ${currentQuestion.options[3] ? `\n (D) ${currentQuestion.options[3]}` : ''}`
+                                                : currentQuestion.question
+                                            }
+                                            title={`Simulated Audio: ${currentQuestion.category}`}
+                                            autoPlay={['Part 1', 'Part 2'].includes(currentQuestion.category)}
+                                        />
+                                        {['Part 1', 'Part 2'].includes(currentQuestion.category) && (
+                                            <p className="text-center text-slate-500 text-sm mt-2 font-mono">
+                                                <Mic2 className="w-4 h-4 inline mr-2" />
+                                                Listen to the statement and select the best response.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    {/* Hide Text for Part 1 & 2 (Simulated Listening) */}
+                                    { !['Part 1', 'Part 2'].includes(currentQuestion.category) && (
+                                        <h1 className="text-2xl md:text-3xl font-medium leading-relaxed">
+                                            {currentQuestion.category === 'Part 5' ? (
+                                                <span>
+                                                    {currentQuestion.question.split('___').map((part, i, arr) => (
+                                                        <React.Fragment key={i}>
+                                                            {part}
+                                                            {i < arr.length - 1 && <span className="px-4 py-1 mx-1 border-b-2 border-cyan-500/50 text-cyan-400 font-mono inline-block min-w-[3em] text-center">___</span>}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </span>
+                                            ) : (
+                                                currentQuestion.question
+                                            )}
+                                        </h1>
+                                    )}
+                                    
+                                    {/* Japanese Translation (Contextual) */}
+                                    {currentQuestion.translations?.ja && !['Part 1', 'Part 2'].includes(currentQuestion.category) && (
+                                         <p className="text-slate-500 text-sm">{currentQuestion.translations.ja.question}</p>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3">
+                                    {currentQuestion.options?.map((option: string, idx: number) => {
+                                        const isSelected = answers[currentQuestionIndex] === idx;
+                                        const isCorrect = idx === currentQuestion.correctAnswer;
+                                        
+                                        let variant = "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800";
+                                        if (isSelected && !hasAnsweredCurrent) variant = "bg-cyan-500/10 border-cyan-500 text-cyan-400";
+                                        
+                                        if (answers[currentQuestionIndex] !== undefined) {
+                                            if (isCorrect) variant = "bg-emerald-500/10 border-emerald-500 text-emerald-400";
+                                            if (isSelected && !isCorrect) variant = "bg-rose-500/10 border-rose-500 text-rose-400";
+                                        }
+
+                                        // Hide option text for Part 1 & 2
+                                        const showText = !['Part 1', 'Part 2'].includes(currentQuestion.category);
+                                        const label = String.fromCharCode(65 + idx); // A, B, C...
+
+                                        return (
+                                            <button
+                                                key={idx}
+                                                disabled={hasAnsweredCurrent}
+                                                onClick={() => {
+                                                    if (hasAnsweredCurrent) return;
+                                                    const isCorrect = idx === currentQuestion.correctAnswer;
+                                                    if (isCorrect) soundManager.success();
+                                                    else soundManager.error();
+                                                    
+                                                    setAnswer(currentQuestionIndex, idx);
+                                                }}
+                                                onMouseEnter={() => !hasAnsweredCurrent && soundManager.hover()}
+                                                className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group flex items-center gap-4 ${variant}`}
+                                            >
+                                                <span className="w-10 h-10 rounded-lg bg-slate-900/50 flex items-center justify-center text-sm font-bold font-mono border border-white/10 group-hover:border-white/30 transition-colors shrink-0">
+                                                    {label}
+                                                </span>
+                                                
+                                                {showText ? (
+                                                    <span className="text-lg">{option}</span>
+                                                ) : (
+                                                    <div className="h-2 w-32 bg-slate-700/50 rounded animate-pulse" />
+                                                )}
+                                                
+                                                {/* Show real text only revealed after answer? Optional */}
+                                                {hasAnsweredCurrent && !showText && (
+                                                    <span className="text-sm text-slate-400 ml-auto fade-in italic">
+                                                        {option}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Detailed Explanation (Root Analysis) */}
+                                {answers[currentQuestionIndex] !== undefined && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        className="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 overflow-hidden"
+                                    >
+                                        <h3 className="text-cyan-400 font-brand text-lg mb-2 flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4" />
+                                            ROOT ANALYSIS
+                                        </h3>
+                                        <p className="text-slate-300 leading-relaxed mb-4">
+                                            {currentQuestion.explanation}
+                                        </p>
+                                        {currentQuestion.translations?.ja?.explanation && (
+                                            <p className="text-slate-500 text-sm border-t border-slate-800 pt-4">
+                                                {currentQuestion.translations.ja.explanation}
+                                            </p>
+                                        )}
+                                    </motion.div>
                                 )}
                             </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                {currentQuestion?.options?.map((option: string, idx: number) => {
-                                    const isSelected = answers[currentQuestionIndex] === idx;
-                                    const isCorrect = idx === currentQuestion.correctAnswer;
-                                    
-                                    let variant = "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800";
-                                    if (isSelected && !hasAnsweredCurrent) variant = "bg-cyan-500/10 border-cyan-500 text-cyan-400";
-                                    
-                                    if (answers[currentQuestionIndex] !== undefined) {
-                                        if (isCorrect) variant = "bg-emerald-500/10 border-emerald-500 text-emerald-400";
-                                        if (isSelected && !isCorrect) variant = "bg-rose-500/10 border-rose-500 text-rose-400";
-                                    }
-
-                                    return (
-                                        <button
-                                            key={idx}
-                                            disabled={hasAnsweredCurrent}
-                                            onClick={() => {
-                                                if (hasAnsweredCurrent) return;
-                                                const isCorrect = idx === currentQuestion.correctAnswer;
-                                                if (isCorrect) soundManager.success();
-                                                else soundManager.error();
-                                                
-                                                setAnswer(currentQuestionIndex, idx);
-                                            }}
-                                            onMouseEnter={() => !hasAnsweredCurrent && soundManager.hover()}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group ${variant}`}
-                                        >
-                                            <div className="flex items-center gap-4 relative z-10">
-                                                <span className="w-8 h-8 rounded-lg bg-slate-900/50 flex items-center justify-center text-xs font-bold font-mono border border-white/10 group-hover:border-white/30 transition-colors">
-                                                    {idx + 1}
-                                                </span>
-                                                <span className="text-lg">{option}</span>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Detailed Explanation (Root Analysis) */}
-                            {answers[currentQuestionIndex] !== undefined && (
-                                <motion.div 
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    className="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 overflow-hidden"
-                                >
-                                    <h3 className="text-cyan-400 font-brand text-lg mb-2 flex items-center gap-2">
-                                        <AlertTriangle className="w-4 h-4" />
-                                        ROOT ANALYSIS
-                                    </h3>
-                                    <p className="text-slate-300 leading-relaxed mb-4">
-                                        {currentQuestion.explanation}
-                                    </p>
-                                    {currentQuestion.translations?.ja?.explanation && (
-                                        <p className="text-slate-500 text-sm border-t border-slate-800 pt-4">
-                                            {currentQuestion.translations.ja.explanation}
-                                        </p>
-                                    )}
-                                </motion.div>
-                            )}
                         </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
             </div>

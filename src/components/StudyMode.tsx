@@ -97,11 +97,20 @@ export const StudyMode: React.FC = () => {
                                     whileHover={{ scale: 1.02 }}
                                     onMouseEnter={() => soundManager.hover()}
                                     onClick={async () => {
-                                        soundManager.click();
+                                        console.log('Button clicked:', cat.id);
+                                        try {
+                                            soundManager.click();
+                                        } catch (e) {
+                                            console.error('Sound error:', e);
+                                        }
+                                        
+                                        console.log('Auth status:', isAuthenticated);
                                         if (!isAuthenticated) {
+                                            console.log('Redirecting to login');
                                             navigate('/login');
                                             return;
                                         }
+                                        console.log('Navigating to quiz:', `/quiz/${cat.id}`);
                                         navigate(`/quiz/${cat.id}`);
                                     }}
                                     className="group relative p-4 bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition-all overflow-hidden flex flex-col h-full min-h-[120px]"

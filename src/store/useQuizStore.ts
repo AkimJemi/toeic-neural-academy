@@ -49,9 +49,11 @@ export const useQuizStore = create<ExtendedQuizState>((set, get) => ({
             const questions = Array.isArray(data) ? data : data.data;
 
             if (!questions || questions.length === 0) {
+                console.error('SECTOR_EMPTY: No data available.');
                 return { success: false, error: 'SECTOR_EMPTY: No data available for this category.' };
             }
 
+            console.log('Setting quiz state with questions:', questions.length);
             set({
                 questions: normalizeKeys(questions),
                 currentQuestionIndex: 0,

@@ -16,6 +16,9 @@ export interface Question {
         }
     };
     source?: string;
+    imageUrl?: string;
+    audioUrl?: string;
+    passage?: string;
     isBookmarked?: boolean; // For local state
 }
 
