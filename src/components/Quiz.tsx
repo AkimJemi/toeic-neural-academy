@@ -262,9 +262,20 @@ export const Quiz: React.FC = () => {
                                         const label = String.fromCharCode(65 + idx); // A, B, C...
 
                                         return (
-                                            <button
+                                            <div
                                                 key={idx}
-                                                disabled={hasAnsweredCurrent}
+                                                role="button"
+                                                tabIndex={hasAnsweredCurrent ? -1 : 0}
+                                                onKeyDown={(e) => {
+                                                    if (hasAnsweredCurrent) return;
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        const isCorrect = idx === currentQuestion.correctAnswer;
+                                                        if (isCorrect) soundManager.success();
+                                                        else soundManager.error();
+                                                        setAnswer(currentQuestionIndex, idx);
+                                                    }
+                                                }}
                                                 onClick={() => {
                                                     if (hasAnsweredCurrent) return;
                                                     const isCorrect = idx === currentQuestion.correctAnswer;
@@ -274,25 +285,25 @@ export const Quiz: React.FC = () => {
                                                     setAnswer(currentQuestionIndex, idx);
                                                 }}
                                                 onMouseEnter={() => !hasAnsweredCurrent && soundManager.hover()}
-                                                className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group flex items-center gap-4 ${variant}`}
+                                                className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group flex items-center gap-4 select-text ${variant} ${!hasAnsweredCurrent ? 'cursor-pointer' : ''}`}
                                             >
-                                                <span className="w-10 h-10 rounded-lg bg-slate-900/50 flex items-center justify-center text-sm font-bold font-mono border border-white/10 group-hover:border-white/30 transition-colors shrink-0">
+                                                <span className="w-10 h-10 rounded-lg bg-slate-900/50 flex items-center justify-center text-sm font-bold font-mono border border-white/10 group-hover:border-white/30 transition-colors shrink-0 pointer-events-none">
                                                     {label}
                                                 </span>
                                                 
                                                 {showText ? (
-                                                    <span className="text-lg">{option}</span>
+                                                    <span className="text-lg pointer-events-auto">{option}</span>
                                                 ) : (
-                                                    <div className="h-2 w-32 bg-slate-700/50 rounded animate-pulse" />
+                                                    <div className="h-2 w-32 bg-slate-700/50 rounded animate-pulse pointer-events-none" />
                                                 )}
                                                 
                                                 {/* Show real text only revealed after answer? Optional */}
                                                 {hasAnsweredCurrent && !showText && (
-                                                    <span className="text-sm text-slate-400 ml-auto fade-in italic">
+                                                    <span className="text-sm text-slate-400 ml-auto fade-in italic pointer-events-auto">
                                                         {option}
                                                     </span>
                                                 )}
-                                            </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
